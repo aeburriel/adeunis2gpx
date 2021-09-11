@@ -8,6 +8,8 @@ from datetime import date, datetime, time
 from gpxpy import gpx
 from optparse import OptionParser
 from typing import TextIO
+import fileinput
+import sys
 
 AdeunisSample = namedtuple("AdeunisSample",
     ("time, latitude, longitude, "
@@ -138,14 +140,19 @@ def parseTime(text: str) -> time:
 
 
 if __name__ == "__main__":
-    usage = "usage: %prog inFile outFile"
+    usage = "usage: %prog [inFile [inFile ...]]"
     parser = OptionParser(usage)
-    (options, args) = parser.parse_args()
-    if len(args) != 2:
-        parser.error("incorrect number of arguments")
+    parser.add_option("-o", "--output",
+        help="Specifies the output file. '-' is stdout, which is the default.")
+    (options, files) = parser.parse_args()
+    if len(files) == 0 and sys.stdin.isatty():
+        parser.error("no input files specified and stdin is not piped.")
 
-    with open(args[-2], "rt") as f:
+    with fileinput.input(files) as f:
         adeunis = AdeunisLog(f)
 
-    with open(args[-1], "wt") as f:
-        f.write(adeunis.toGPX())
+    if options.output and options.output != "-":
+        with open(options.output, "wt") as f:
+            f.write(adeunis.toGPX())
+    else:
+        sys.stdout.write(adeunis.toGPX())
