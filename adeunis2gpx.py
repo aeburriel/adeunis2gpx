@@ -3,12 +3,11 @@
 # adeunis2gpx - A converter for Adeunis LoRaWAN FTD logs to GPX
 # Copyright (c) 2021-09-10 13:02:05 Antonio Eugenio Burriel <aeburriel@gmail.com>
 
+from argparse import ArgumentParser, FileType
 from collections import namedtuple
 from datetime import date, datetime, time
 from gpxpy import gpx
-from optparse import OptionParser
 from typing import TextIO
-import fileinput
 import sys
 
 AdeunisSample = namedtuple("AdeunisSample",
@@ -19,9 +18,10 @@ AdeunisSample = namedtuple("AdeunisSample",
 
 
 class AdeunisLog:
-    def __init__(self, log: TextIO):
+    def __init__(self):
         self.samples = []
 
+    def parse(self, log: TextIO):
         while line := log.readline():
             fields = line.split()
             if len(fields) != 22:
@@ -140,19 +140,17 @@ def parseTime(text: str) -> time:
 
 
 if __name__ == "__main__":
-    usage = "usage: %prog [inFile [inFile ...]]"
-    parser = OptionParser(usage)
-    parser.add_option("-o", "--output",
-        help="Specifies the output file. '-' is stdout, which is the default.")
-    (options, files) = parser.parse_args()
-    if len(files) == 0 and sys.stdin.isatty():
-        parser.error("no input files specified and stdin is not piped.")
+    parser = ArgumentParser()
+    parser.add_argument("infile", nargs="+", type=FileType("r"),
+        help="specify input files")
+    parser.add_argument("-o", "--output", nargs="?", type=FileType("w"), default=sys.stdout,
+        help="specify the output file.  The default is stdout")
+    args = parser.parse_args()
 
-    with fileinput.input(files) as f:
-        adeunis = AdeunisLog(f)
+    adeunis = AdeunisLog()
+    for file in args.infile:
+        with file as f:
+            adeunis.parse(f)
 
-    if options.output and options.output != "-":
-        with open(options.output, "wt") as f:
-            f.write(adeunis.toGPX())
-    else:
-        sys.stdout.write(adeunis.toGPX())
+    with args.output as f:
+        f.write(adeunis.toGPX())
