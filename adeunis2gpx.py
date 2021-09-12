@@ -42,12 +42,9 @@ class AdeunisLog:
                 int(fields[19]), int(fields[20]), parsePercent(fields[21]))
             self.samples.append(sample)
 
-    def toGPX(self, day: date = None) -> str:
+    def toGPX(self, day: date) -> str:
         out = gpx.GPX()
         out.creator = "adeunis2gpx"
-
-        if not day:
-            day = date.today()
 
         for sample in self.samples:
             if not (sample.latitude or sample.longitude):
@@ -143,6 +140,8 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("infile", nargs="+", type=FileType("r"),
         help="specify input files")
+    parser.add_argument("-d", "--date", nargs="?", type=date.fromisoformat, default=date.today(),
+        help="specify the mandatory date for GPX timestamps in ISO 8601 format.  The default is today's date")
     parser.add_argument("-o", "--output", nargs="?", type=FileType("w"), default=sys.stdout,
         help="specify the output file.  The default is stdout")
     args = parser.parse_args()
@@ -153,4 +152,4 @@ if __name__ == "__main__":
             adeunis.parse(f)
 
     with args.output as f:
-        f.write(adeunis.toGPX())
+        f.write(adeunis.toGPX(args.date))
