@@ -29,11 +29,11 @@ class AdeunisLog:
 
             try:
                 lat = dms2dd(float(fields[1]), float(fields[2]), float(fields[3]), fields[4])
-            except:
+            except ValueError:
                 lat = None
             try:
                 lon = dms2dd(float(fields[5]), float(fields[6]), float(fields[7]), fields[8])
-            except:
+            except ValueError:
                 lon = None
 
             sample = AdeunisSample(parseTime(fields[0]), lat, lon,
@@ -87,42 +87,42 @@ def dms2dd(degrees: float, minutes: float, seconds: float, direction: str) -> fl
 def parseDB(text: str) -> int:
     try:
         return int(text.strip("dB"))
-    except:
+    except ValueError:
         return None
 
 
 def parseFrequency(text: str) -> int:
     try:
         return int(text.strip("kHz")) * 1000
-    except:
+    except ValueError:
         return None
 
 
 def parsePercent(text: str) -> int:
     try:
         return int(text.strip("%"))
-    except:
+    except ValueError:
         return None
 
 
 def parsePower(text: str) -> int:
     try:
         return int(text.strip("dBm"))
-    except:
+    except ValueError:
         return None
 
 
 def parseQ(text: str) -> int:
     try:
         return int(text)
-    except:
+    except ValueError:
         return None
 
 
 def parseSF(text: str) -> str:
     try:
         return int(text.strip("SF"))
-    except:
+    except ValueError:
         return None
 
 
@@ -135,7 +135,7 @@ def parseText(text: str) -> str:
 def parseTime(text: str) -> time:
     try:
         return time.fromisoformat(text)
-    except:
+    except ValueError:
         return None
 
 
