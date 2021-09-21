@@ -11,11 +11,16 @@ from typing import TextIO
 from xml.etree.ElementTree import Element
 import sys
 
-AdeunisSample = namedtuple("AdeunisSample",
+NTAdeunisSample = namedtuple("AdeunisSample",
     ("time, latitude, longitude, "
      "uSF, uFrequency, uPower, uSNR, uQ, "
      "dSF, dFrequency, dRSSI, dSNR, dQ, "
      "ul, dl, per"))
+
+
+class AdeunisSample(NTAdeunisSample):
+    def toXML(self, namespace: str, rootTag: str) -> Element:
+        return dict2xml(namespace, rootTag, self._asdict())
 
 
 class AdeunisLog:
@@ -70,7 +75,7 @@ class AdeunisLog:
                 )
             point = gpx.GPXTrackPoint(sample.latitude, sample.longitude,
                 time=timestamp, name=name, comment=comment)
-            point.extensions.append(adeunisSample2xml("lora", "TrackPointExtension", sample))
+            point.extensions.append(sample.toXML("lora", "TrackPointExtension"))
             out.waypoints.append(point)
 
         return out.to_xml()
@@ -85,11 +90,6 @@ def dict2xml(namespace: str, rootTag: str, dictionary: dict) -> Element:
             child.text = str(value)
             element.append(child)
     return element
-
-
-def adeunisSample2xml(namespace: str, rootTag: str, sample: AdeunisSample) -> Element:
-    dictionary = sample._asdict()
-    return dict2xml(namespace, rootTag, dictionary)
 
 
 def dms2dd(degrees: float, minutes: float, seconds: float, direction: str) -> float:
