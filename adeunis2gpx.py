@@ -7,7 +7,7 @@ from argparse import ArgumentParser, FileType
 from collections import namedtuple
 from datetime import date, datetime, time
 from gpxpy import gpx
-from typing import TextIO
+from typing import Optional, TextIO
 from xml.etree.ElementTree import Element
 import sys
 
@@ -20,7 +20,7 @@ NTAdeunisSample = namedtuple("AdeunisSample",
 
 class AdeunisSample(NTAdeunisSample):
     def toXML(self, namespace: str, rootTag: str) -> Element:
-        return dict2xml(namespace, rootTag, self._asdict())
+        return dict2xml(self._asdict(), rootTag, namespace)
 
 
 class AdeunisLog:
@@ -81,12 +81,17 @@ class AdeunisLog:
         return out.to_xml()
 
 
-def dict2xml(namespace: str, rootTag: str, dictionary: dict) -> Element:
+def namePrefix(tag: str, namespace: Optional[str] = None) -> str:
+    # https://stackoverflow.com/questions/51295158/avoiding-none-in-f-string
+    return ":".join(filter(None, (namespace, tag)))
+
+
+def dict2xml(dictionary: dict, rootTag: str, namespace: Optional[str] = None) -> Element:
     # https://www.geeksforgeeks.org/turning-a-dictionary-into-xml-in-python/
-    element = Element(f"{namespace}:{rootTag}")
+    element = Element(namePrefix(rootTag, namespace))
     for key, value in dictionary.items():
         if value:
-            child = Element(f"{namespace}:{key}")
+            child = Element(namePrefix(key, namespace))
             child.text = str(value)
             element.append(child)
     return element
