@@ -8,6 +8,7 @@ from collections import namedtuple
 from datetime import date, datetime, time
 from gpxpy import gpx
 from typing import TextIO
+from xml.etree.ElementTree import Element
 import sys
 
 AdeunisSample = namedtuple("AdeunisSample",
@@ -67,10 +68,28 @@ class AdeunisLog:
                 f"Downlink: {dSF} @ {dFrequency}, RSSI: {dRSSI}, SNR: {dSNR}, Q: {dQ}\n"
                 f"Counters: Upload: {sample.ul}, Download: {sample.dl}, PER: {sample.per}%"
                 )
-            out.waypoints.append(gpx.GPXTrackPoint(sample.latitude, sample.longitude,
-                time=timestamp, name=name, comment=comment))
+            point = gpx.GPXTrackPoint(sample.latitude, sample.longitude,
+                time=timestamp, name=name, comment=comment)
+            point.extensions.append(adeunisSample2xml("lora", "TrackPointExtension", sample))
+            out.waypoints.append(point)
 
         return out.to_xml()
+
+
+def dict2xml(namespace: str, rootTag: str, dictionary: dict) -> Element:
+    # https://www.geeksforgeeks.org/turning-a-dictionary-into-xml-in-python/
+    element = Element(f"{namespace}:{rootTag}")
+    for key, value in dictionary.items():
+        if value:
+            child = Element(f"{namespace}:{key}")
+            child.text = str(value)
+            element.append(child)
+    return element
+
+
+def adeunisSample2xml(namespace: str, rootTag: str, sample: AdeunisSample) -> Element:
+    dictionary = sample._asdict()
+    return dict2xml(namespace, rootTag, dictionary)
 
 
 def dms2dd(degrees: float, minutes: float, seconds: float, direction: str) -> float:
