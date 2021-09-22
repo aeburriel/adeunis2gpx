@@ -23,33 +23,33 @@ class AdeunisSample(NTAdeunisSample):
         root = Element(namePrefix(rootTag, namespace), {namePrefix(namespace, "xmlns"): "http://www.example.org/adeunis2gpx"})
         uplink = SubElement(root, namePrefix("uplink", namespace))
         if self.uSF:
-            SubElement(uplink, namePrefix("spreading-factor", namespace)).text = str(self.uSF)
+            SubElement(uplink, namePrefix("spreading-factor", namespace)).text = f"{self.uSF}"
         if self.uFrequency:
-            SubElement(uplink, namePrefix("frequency", namespace)).text = str(self.uFrequency)
+            SubElement(uplink, namePrefix("frequency", namespace)).text = f"{self.uFrequency}"
         if self.uPower:
-            SubElement(uplink, namePrefix("power", namespace)).text = str(self.uPower)
+            SubElement(uplink, namePrefix("power", namespace)).text = f"{self.uPower:+}"
         if self.uSNR:
-            SubElement(uplink, namePrefix("SNR", namespace)).text = str(self.uSNR)
+            SubElement(uplink, namePrefix("SNR", namespace)).text = f"{self.uSNR:+}"
         if self.uQ:
-            SubElement(uplink, namePrefix("quality", namespace)).text = str(self.uQ)
+            SubElement(uplink, namePrefix("quality", namespace)).text = f"{self.uQ}"
 
         if self.dFrequency:
             downlink = SubElement(root, namePrefix("downlink", namespace))
             if self.dSF:
-                SubElement(downlink, namePrefix("spreading-factor", namespace)).text = str(self.dSF)
+                SubElement(downlink, namePrefix("spreading-factor", namespace)).text = f"{self.dSF}"
             if self.dFrequency:
-                SubElement(downlink, namePrefix("frequency", namespace)).text = str(self.dFrequency)
+                SubElement(downlink, namePrefix("frequency", namespace)).text = f"{self.dFrequency}"
             if self.dRSSI:
-                SubElement(downlink, namePrefix("RSSI", namespace)).text = str(self.dRSSI)
+                SubElement(downlink, namePrefix("RSSI", namespace)).text = f"{self.dRSSI:+}"
             if self.dSNR:
-                SubElement(downlink, namePrefix("SNR", namespace)).text = str(self.dSNR)
+                SubElement(downlink, namePrefix("SNR", namespace)).text = f"{self.dSNR:+}"
             if self.dQ:
-                SubElement(downlink, namePrefix("quality", namespace)).text = str(self.dQ)
+                SubElement(downlink, namePrefix("quality", namespace)).text = f"{self.dQ}"
 
         counters = SubElement(root, namePrefix("counters", namespace))
-        SubElement(counters, namePrefix("sent", namespace)).text = str(self.ul)
-        SubElement(counters, namePrefix("received", namespace)).text = str(self.dl)
-        SubElement(counters, namePrefix("error-rate", namespace)).text = str(self.per)
+        SubElement(counters, namePrefix("sent", namespace)).text = f"{self.ul}"
+        SubElement(counters, namePrefix("received", namespace)).text = f"{self.dl}"
+        SubElement(counters, namePrefix("error-rate", namespace)).text = f"{self.per}"
 
         return root
 
@@ -90,12 +90,12 @@ class AdeunisLog:
             timestamp = datetime.combine(day, sample.time) if sample.time else None
             uSF = f"SF{sample.uSF}" if sample.uSF else "-"
             dSF = f"SF{sample.dSF}" if sample.dSF else "-"
-            uSNR = f"{sample.uSNR}dB" if sample.uSNR else "-"
-            dSNR = f"{sample.dSNR}dB" if sample.dSNR else "-"
+            uSNR = f"{sample.uSNR:+}dB" if sample.uSNR else "-"
+            dSNR = f"{sample.dSNR:+}dB" if sample.dSNR else "-"
             uFrequency = f"{sample.uFrequency / 1e6}MHz" if sample.uFrequency else "-"
             dFrequency = f"{sample.dFrequency / 1e6}MHz" if sample.dFrequency else "-"
-            uPower = f"{sample.uPower}dBm" if sample.uPower else "-"
-            dRSSI = f"{sample.dRSSI}dBm" if sample.dRSSI else "-"
+            uPower = f"{sample.uPower:+}dBm" if sample.uPower else "-"
+            dRSSI = f"{sample.dRSSI:+}dBm" if sample.dRSSI else "-"
             uQ = sample.uQ if sample.uQ else "-"
             dQ = sample.dQ if sample.dQ else "-"
             name = f"Downlink: {uSF} {dSNR} @ {dRSSI} | Uplink: {uSF} {uSNR} @ {uPower}"
