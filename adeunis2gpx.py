@@ -49,7 +49,7 @@ class AdeunisSample(NTAdeunisSample):
         counters = SubElement(root, namePrefix("counters", namespace))
         SubElement(counters, namePrefix("sent", namespace)).text = f"{self.ul}"
         SubElement(counters, namePrefix("received", namespace)).text = f"{self.dl}"
-        SubElement(counters, namePrefix("error-rate", namespace)).text = f"{self.per}"
+        SubElement(counters, namePrefix("error-rate", namespace)).text = f"{self.per}%"
 
         return root
 
