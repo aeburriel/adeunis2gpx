@@ -99,13 +99,14 @@ class AdeunisLog:
             uQ = sample.uQ if sample.uQ else "-"
             dQ = sample.dQ if sample.dQ else "-"
             name = f"Downlink: {uSF} {dSNR} @ {dRSSI} | Uplink: {uSF} {uSNR} @ {uPower}"
-            comment = (
+            description = (
                 f"Uplink:   {uSF} @ {uFrequency}, Power: {uPower}, SNR: {uSNR}, Q: {uQ}\n"
                 f"Downlink: {dSF} @ {dFrequency}, RSSI: {dRSSI}, SNR: {dSNR}, Q: {dQ}\n"
                 f"Counters: Upload: {sample.ul}, Download: {sample.dl}, PER: {sample.per}%"
                 )
             point = gpx.GPXTrackPoint(sample.latitude, sample.longitude,
-                time=timestamp, name=name, comment=comment)
+                time=timestamp, name=name)
+            point.description = description
             point.extensions.append(sample.toXML("lora", "TrackPointExtension"))
             out.waypoints.append(point)
 
