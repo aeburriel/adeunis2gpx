@@ -8,7 +8,7 @@ from collections import namedtuple
 from datetime import date, datetime, time
 from gpxpy import gpx
 from typing import Optional, TextIO
-from xml.etree.ElementTree import Element
+from xml.etree.ElementTree import Element, SubElement
 import sys
 
 NTAdeunisSample = namedtuple("AdeunisSample",
@@ -20,7 +20,38 @@ NTAdeunisSample = namedtuple("AdeunisSample",
 
 class AdeunisSample(NTAdeunisSample):
     def toXML(self, namespace: str, rootTag: str) -> Element:
-        return dict2xml(self._asdict(), rootTag, namespace)
+        root = Element(namePrefix(rootTag, namespace), {namePrefix(namespace, "xmlns"): "http://www.example.org/adeunis2gpx"})
+        uplink = SubElement(root, namePrefix("uplink", namespace))
+        if self.uSF:
+            SubElement(uplink, namePrefix("spreading-factor", namespace)).text = str(self.uSF)
+        if self.uFrequency:
+            SubElement(uplink, namePrefix("frequency", namespace)).text = str(self.uFrequency)
+        if self.uPower:
+            SubElement(uplink, namePrefix("power", namespace)).text = str(self.uPower)
+        if self.uSNR:
+            SubElement(uplink, namePrefix("SNR", namespace)).text = str(self.uSNR)
+        if self.uQ:
+            SubElement(uplink, namePrefix("quality", namespace)).text = str(self.uQ)
+
+        if self.dFrequency:
+            downlink = SubElement(root, namePrefix("downlink", namespace))
+            if self.dSF:
+                SubElement(downlink, namePrefix("spreading-factor", namespace)).text = str(self.dSF)
+            if self.dFrequency:
+                SubElement(downlink, namePrefix("frequency", namespace)).text = str(self.dFrequency)
+            if self.dRSSI:
+                SubElement(downlink, namePrefix("RSSI", namespace)).text = str(self.dRSSI)
+            if self.dSNR:
+                SubElement(downlink, namePrefix("SNR", namespace)).text = str(self.dSNR)
+            if self.dQ:
+                SubElement(downlink, namePrefix("quality", namespace)).text = str(self.dQ)
+
+        counters = SubElement(root, namePrefix("counters", namespace))
+        SubElement(counters, namePrefix("sent", namespace)).text = str(self.ul)
+        SubElement(counters, namePrefix("received", namespace)).text = str(self.dl)
+        SubElement(counters, namePrefix("error-rate", namespace)).text = str(self.per)
+
+        return root
 
 
 class AdeunisLog:
@@ -84,17 +115,6 @@ class AdeunisLog:
 def namePrefix(tag: str, namespace: Optional[str] = None) -> str:
     # https://stackoverflow.com/questions/51295158/avoiding-none-in-f-string
     return ":".join(filter(None, (namespace, tag)))
-
-
-def dict2xml(dictionary: dict, rootTag: str, namespace: Optional[str] = None) -> Element:
-    # https://www.geeksforgeeks.org/turning-a-dictionary-into-xml-in-python/
-    element = Element(namePrefix(rootTag, namespace))
-    for key, value in dictionary.items():
-        if value:
-            child = Element(namePrefix(key, namespace))
-            child.text = str(value)
-            element.append(child)
-    return element
 
 
 def dms2dd(degrees: float, minutes: float, seconds: float, direction: str) -> float:
