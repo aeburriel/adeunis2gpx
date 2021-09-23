@@ -55,6 +55,15 @@ class AdeunisSample(NTAdeunisSample):
 
 
 class AdeunisLog:
+    Q_SYMBOL_MISSING = "Navaid, Black"
+    Q_SYMBOL_UNKNOWN = "Navaid, White"
+    Q_SYMBOLS = {
+        0: "Navaid, Red",
+        1: "Navaid, Orange",
+        2: "Navaid, Amber",
+        3: "Navaid, Green",
+    }
+
     def __init__(self):
         self.samples = []
 
@@ -79,7 +88,7 @@ class AdeunisLog:
                 int(fields[19]), int(fields[20]), parsePercent(fields[21]))
             self.samples.append(sample)
 
-    def toGPX(self, day: date) -> str:
+    def toGPX(self, day: date, markers: str) -> str:
         out = gpx.GPX()
         out.creator = "adeunis2gpx"
 
@@ -108,8 +117,16 @@ class AdeunisLog:
                 f"Downlink: {dSF} @ {dFrequency}, RSSI: {dRSSI}, SNR: {dSNR}, Q: {dQ}\n"
                 f"Counters: Upload: {sample.ul}, Download: {sample.dl}, PER: {sample.per}%"
                 )
+            if markers =="cross":
+                symbol = "Crossing"
+            else:
+                symbol = self.Q_SYMBOL_MISSING
+                if markers == "downlink" and sample.dQ:
+                    symbol = self.Q_SYMBOLS.get(sample.dQ, self.Q_SYMBOL_UNKNOWN)
+                elif markers == "uplink" and sample.uQ:
+                    symbol = self.Q_SYMBOLS.get(sample.uQ, self.Q_SYMBOL_UNKNOWN)
             point = gpx.GPXTrackPoint(sample.latitude, sample.longitude,
-                time=timestamp, name=name, symbol="Crossing")
+                time=timestamp, name=name, symbol=symbol)
             point.description = description
             point.extensions.append(sample.toXML("lora", "TrackPointExtension"))
             out.waypoints.append(point)
@@ -191,6 +208,8 @@ if __name__ == "__main__":
         help="specify input files")
     parser.add_argument("-d", "--date", nargs="?", type=date.fromisoformat, default=date.today(),
         help="specify the mandatory date for GPX timestamps in ISO 8601 format.  The default is today's date")
+    parser.add_argument("-m", "--markers", nargs="?", choices=["cross", "downlink", "uplink"], default="cross",
+        help="specify the marker for the samples.  The default is 'cross'. 'downlink' and 'uplink' represents received and transmitted signal strength respectively")
     parser.add_argument("-o", "--output", nargs="?", type=FileType("w"), default=sys.stdout,
         help="specify the output file.  The default is stdout")
     args = parser.parse_args()
@@ -201,4 +220,4 @@ if __name__ == "__main__":
             adeunis.parse(f)
 
     with args.output as f:
-        f.write(adeunis.toGPX(args.date))
+        f.write(adeunis.toGPX(args.date, args.markers))
