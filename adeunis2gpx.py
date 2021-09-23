@@ -109,7 +109,7 @@ class AdeunisLog:
                 f"Counters: Upload: {sample.ul}, Download: {sample.dl}, PER: {sample.per}%"
                 )
             point = gpx.GPXTrackPoint(sample.latitude, sample.longitude,
-                time=timestamp, name=name)
+                time=timestamp, name=name, symbol="Crossing")
             point.description = description
             point.extensions.append(sample.toXML("lora", "TrackPointExtension"))
             out.waypoints.append(point)
