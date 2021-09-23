@@ -90,15 +90,19 @@ class AdeunisLog:
             timestamp = datetime.combine(day, sample.time) if sample.time else None
             uSF = f"SF{sample.uSF}" if sample.uSF else "-"
             dSF = f"SF{sample.dSF}" if sample.dSF else "-"
-            uSNR = f"{sample.uSNR:+}dB" if sample.uSNR else "-"
-            dSNR = f"{sample.dSNR:+}dB" if sample.dSNR else "-"
+            uSNR = f"{sample.uSNR:+}㏈" if sample.uSNR else "-"
+            dSNR = f"{sample.dSNR:+}㏈" if sample.dSNR else "-"
             uFrequency = f"{sample.uFrequency / 1e6}MHz" if sample.uFrequency else "-"
             dFrequency = f"{sample.dFrequency / 1e6}MHz" if sample.dFrequency else "-"
-            uPower = f"{sample.uPower:+}dBm" if sample.uPower else "-"
-            dRSSI = f"{sample.dRSSI:+}dBm" if sample.dRSSI else "-"
+            uPower = f"{sample.uPower:+}㏈m" if sample.uPower else "-"
+            dRSSI = f"{sample.dRSSI:+}㏈m" if sample.dRSSI else "-"
             uQ = sample.uQ if sample.uQ else "-"
             dQ = sample.dQ if sample.dQ else "-"
-            name = f"Downlink: {uSF} {dSNR} @ {dRSSI} | Uplink: {uSF} {uSNR} @ {uPower}"
+            nameD = f"↓{dRSSI}﹫{dSNR}" if sample.dRSSI else None
+            nameU = f"↑{uSNR}" if sample.uSNR else None
+            name = " ".join(filter(None, (nameD,nameU)))
+            if not name:
+                name = "∅"
             description = (
                 f"Uplink:   {uSF} @ {uFrequency}, Power: {uPower}, SNR: {uSNR}, Q: {uQ}\n"
                 f"Downlink: {dSF} @ {dFrequency}, RSSI: {dRSSI}, SNR: {dSNR}, Q: {dQ}\n"
