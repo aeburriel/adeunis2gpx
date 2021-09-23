@@ -129,6 +129,8 @@ class AdeunisLog:
                 time=timestamp, name=name, symbol=symbol)
             point.description = description
             point.extensions.append(sample.toXML("lora", "TrackPointExtension"))
+            point.source = "Adeunis LoRaWAN Field Test Device"
+            point.type = "field sample"
             out.waypoints.append(point)
 
         return out.to_xml()
