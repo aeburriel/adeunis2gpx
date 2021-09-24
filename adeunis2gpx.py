@@ -21,6 +21,7 @@ NTAdeunisSample = namedtuple("AdeunisSample",
 class AdeunisSample(NTAdeunisSample):
     def toXML(self, namespace: str, rootTag: str) -> Element:
         root = Element(namePrefix(rootTag, namespace), {namePrefix(namespace, "xmlns"): "http://www.example.org/adeunis2gpx"})
+
         uplink = SubElement(root, namePrefix("uplink", namespace))
         if self.uSF:
             SubElement(uplink, namePrefix("spreading-factor", namespace)).text = f"{self.uSF}"
@@ -107,6 +108,7 @@ class AdeunisLog:
             dRSSI = f"{sample.dRSSI:+}㏈m" if sample.dRSSI else "-"
             uQ = sample.uQ if sample.uQ else "-"
             dQ = sample.dQ if sample.dQ else "-"
+
             nameD = f"↓{dRSSI}﹫{dSNR}" if sample.dRSSI else None
             nameU = f"↑{uSNR}" if sample.uSNR else None
             name = " ".join(filter(None, (nameD,nameU)))
@@ -117,6 +119,7 @@ class AdeunisLog:
                 f"Downlink: {dSF} @ {dFrequency}, RSSI: {dRSSI}, SNR: {dSNR}, Q: {dQ}\n"
                 f"Counters: Upload: {sample.ul}, Download: {sample.dl}, PER: {sample.per}%"
                 )
+
             if markers =="cross":
                 symbol = "Crossing"
             else:
@@ -125,6 +128,7 @@ class AdeunisLog:
                     symbol = self.Q_SYMBOLS.get(sample.dQ, self.Q_SYMBOL_UNKNOWN)
                 elif markers == "uplink" and sample.uQ:
                     symbol = self.Q_SYMBOLS.get(sample.uQ, self.Q_SYMBOL_UNKNOWN)
+
             point = gpx.GPXTrackPoint(sample.latitude, sample.longitude,
                 time=timestamp, name=name, symbol=symbol)
             point.description = description
@@ -136,17 +140,17 @@ class AdeunisLog:
         return out.to_xml()
 
 
-def namePrefix(tag: str, namespace: Optional[str] = None) -> str:
-    # https://stackoverflow.com/questions/51295158/avoiding-none-in-f-string
-    return ":".join(filter(None, (namespace, tag)))
-
-
 def dms2dd(degrees: float, minutes: float, seconds: float, direction: str) -> float:
     # https://stackoverflow.com/questions/33997361/how-to-convert-degree-minute-second-to-degree-decimal
     dd = degrees + minutes / 60 + seconds / (60 * 60)
     if direction == "S" or direction == "W":
         return -dd
     return dd
+
+
+def namePrefix(tag: str, namespace: Optional[str] = None) -> str:
+    # https://stackoverflow.com/questions/51295158/avoiding-none-in-f-string
+    return ":".join(filter(None, (namespace, tag)))
 
 
 def parseDB(text: str) -> int:
