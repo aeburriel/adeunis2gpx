@@ -6,6 +6,7 @@
 from argparse import ArgumentParser, FileType
 from collections import namedtuple
 from datetime import date, datetime, time
+from geojson import dumps, Feature, Point, FeatureCollection
 from gpxpy import gpx
 from io import StringIO
 from typing import Optional, TextIO
@@ -23,6 +24,40 @@ NTAdeunisSample = namedtuple("AdeunisSample",
 
 
 class AdeunisSample(NTAdeunisSample):
+    def toGeoJSON(self, day: date) -> Feature:
+        timestamp = datetime.combine(day, self.time)
+        data = {
+                "timestamp": str(timestamp),
+                "ul": self.ul,
+                "dl": self.dl,
+                "PER": self.per
+            }
+
+        if self.uSF:
+            data["uSF"] = self.uSF
+        if self.uFrequency:
+            data["uFrequency"] = self.uFrequency
+        if self.uPower:
+            data["uPower"] = self.uPower
+        if self.uSNR:
+            data["uSNR"] = self.uSNR
+        if self.uQ:
+            data["uQ"] = self.uQ
+
+        if self.dFrequency:
+            if self.dSF:
+                data["dSF"] = self.dSF
+            if self.dFrequency:
+                data["dFrequency"] = self.dFrequency
+            if self.dRSSI:
+                data["dRSSI"] = self.dRSSI
+            if self.dSNR:
+                data["dSNR"] = self.dSNR
+            if self.dQ:
+                data["dQ"] = self.dQ
+
+        return Feature(geometry=Point((self.longitude, self.latitude)), properties=data)
+
     def toXML(self, namespace: str, rootTag: str) -> Element:
         root = Element(namePrefix(rootTag, namespace), {namePrefix(namespace, "xmlns"): "http://www.example.org/adeunis2gpx"})
 
@@ -116,6 +151,16 @@ class AdeunisLog:
                 sample.ul, sample.dl, sample.per
             ))
         return output.getvalue()
+
+    def toGeoJSON(self, day: date) -> str:
+        features = []
+        for sample in self.samples:
+            if not (sample.latitude or sample.longitude):
+                continue
+            features.append(sample.toGeoJSON(day))
+
+        collection = FeatureCollection(features)
+        return dumps(collection)
 
     def toGPX(self, day: date, markers: str) -> str:
         out = gpx.GPX()
@@ -246,7 +291,7 @@ if __name__ == "__main__":
         help="specify the marker for the samples.  The default is 'cross'. 'downlink' and 'uplink' represents received and transmitted signal strength respectively")
     parser.add_argument("-o", "--output", nargs="?", type=FileType("w"), default=sys.stdout,
         help="specify the output file.  The default is stdout")
-    parser.add_argument("-t", "--type", nargs="?", choices=["csv", "gpx"], default="gpx",
+    parser.add_argument("-t", "--type", nargs="?", choices=["csv", "geojson", "gpx"], default="gpx",
         help="specify the output format.  The default is 'gpx'.")
     args = parser.parse_args()
 
@@ -258,6 +303,8 @@ if __name__ == "__main__":
     with args.output as f:
         if args.type == "csv":
             output = adeunis.toCSV(args.date)
+        elif args.type == "geojson":
+            output = adeunis.toGeoJSON(args.date)
         elif args.type == "gpx":
             output = adeunis.toGPX(args.date, args.markers)
         f.write(output)
