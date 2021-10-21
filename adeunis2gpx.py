@@ -7,9 +7,13 @@ from argparse import ArgumentParser, FileType
 from collections import namedtuple
 from datetime import date, datetime, time
 from gpxpy import gpx
+from io import StringIO
 from typing import Optional, TextIO
 from xml.etree.ElementTree import Element, SubElement
+
+import csv
 import sys
+
 
 NTAdeunisSample = namedtuple("AdeunisSample",
     ("time, latitude, longitude, "
@@ -88,6 +92,30 @@ class AdeunisLog:
                 parseSF(fields[14]), parseFrequency(fields[15]), parsePower(fields[16]), parseDB(fields[17]), parseQ(fields[18]),
                 int(fields[19]), int(fields[20]), parsePercent(fields[21]))
             self.samples.append(sample)
+
+    def toCSV(self, day: date) -> str:
+        output = StringIO()
+        fields = (
+            "timestamp", "latitude", "longitude",
+            "uSF", "uFrequency", "uPower", "uSNR", "uQ",
+            "dSF", "dFrequency", "dRSSI", "dSNR", "dQ",
+            "ul", "dl", "PER"
+        )
+        writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
+        writer.writerow(fields)
+
+        for sample in self.samples:
+            if not (sample.latitude or sample.longitude):
+                continue
+
+            timestamp = datetime.combine(day, sample.time) if sample.time else None
+            writer.writerow((
+                timestamp, sample.latitude, sample.longitude,
+                sample.uSF, sample.uFrequency, sample.uPower, sample.uSNR, sample.uQ,
+                sample.dSF, sample.dFrequency, sample.dRSSI, sample.dSNR, sample.dQ,
+                sample.ul, sample.dl, sample.per
+            ))
+        return output.getvalue()
 
     def toGPX(self, day: date, markers: str) -> str:
         out = gpx.GPX()
@@ -218,6 +246,8 @@ if __name__ == "__main__":
         help="specify the marker for the samples.  The default is 'cross'. 'downlink' and 'uplink' represents received and transmitted signal strength respectively")
     parser.add_argument("-o", "--output", nargs="?", type=FileType("w"), default=sys.stdout,
         help="specify the output file.  The default is stdout")
+    parser.add_argument("-t", "--type", nargs="?", choices=["csv", "gpx"], default="gpx",
+        help="specify the output format.  The default is 'gpx'.")
     args = parser.parse_args()
 
     adeunis = AdeunisLog()
@@ -226,4 +256,8 @@ if __name__ == "__main__":
             adeunis.parse(f)
 
     with args.output as f:
-        f.write(adeunis.toGPX(args.date, args.markers))
+        if args.type == "csv":
+            output = adeunis.toCSV(args.date)
+        elif args.type == "gpx":
+            output = adeunis.toGPX(args.date, args.markers)
+        f.write(output)
