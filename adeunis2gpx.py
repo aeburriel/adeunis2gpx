@@ -184,7 +184,7 @@ class AdeunisLog:
 
             nameD = f"↓{dRSSI}﹫{dSNR}" if sample.dRSSI else None
             nameU = f"↑{uSNR}" if sample.uSNR else None
-            name = " ".join(filter(None, (nameD,nameU)))
+            name = " ".join(filter(None, (nameD, nameU)))
             if not name:
                 name = "∅"
             description = (
@@ -193,7 +193,7 @@ class AdeunisLog:
                 f"Counters: Upload: {sample.ul}, Download: {sample.dl}, PER: {sample.per}%"
                 )
 
-            if markers =="cross":
+            if markers == "cross":
                 symbol = "Crossing"
             else:
                 symbol = self.Q_SYMBOL_MISSING
